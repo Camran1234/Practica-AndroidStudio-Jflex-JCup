@@ -1,0 +1,51 @@
+import java_cup.runtime.*;
+
+parser code {:
+	public lenguaje (Lexema lexema){
+		super(lexema);
+	}
+:}
+
+terminal COLOR, OPENPARENTHESIS, CLOSEPARENTHESIS, CIRCLE, SQUARE, RECTANGLE, LINE, POLYGON, CHART, ANIMATE,
+	 CURVE, OPERADOR, NUMBER, COMA;
+
+non terminal g, gr, an, r, t, a, c, s, re, li, p, op, d, de, cl, n, m, q, o, ox, l;
+
+op ::=	OPERADOR ;
+cl ::=	COLOR ;
+m ::=	COMA ;
+n ::=	NUMBER ;
+q ::=	LINE
+	|CURVE;
+r ::=	OPENPARENTHESIS
+	;	
+t ::= CLOSEPARENTHESIS ;
+ox ::=	op n ox
+	| op l
+	| /* empty */
+	;
+o ::=	n ox ;
+l ::=	r o t ox ;
+a ::= l m ;
+c ::= a a a cl ;
+s ::= a a a cl ;
+re ::= a a a a cl ;
+li ::= a a a a cl ;
+p ::= a a a a a cl ;
+gr ::=	CIRCLE r c t
+	| SQUARE r s t
+	| RECTANGLE r re t
+	| LINE r li t
+	| POLYGON r p t
+	;
+an ::= ANIMATE d;
+de ::= a a q;
+d ::= r de t;
+g ::=	CHART gr
+	|an
+	;
+
+	
+
+
+	
