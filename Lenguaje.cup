@@ -1,49 +1,102 @@
+package com.example.Parser;
 import java_cup.runtime.*;
+import com.example.Shapes.*;
+import java.util.ArrayList;
 
 parser code {:
-	public lenguaje (Lexema lexema){
+	ArrayList<Circle> circles = new ArrayList<>();
+	ArrayList<Square> squares = new ArrayList<>();
+	ArrayList<Line> lines = new ArrayList<>();	
+	ArrayList<Rectangle> rectangles = new ArrayList<>();
+	ArrayList<Polygon> polygons = new ArrayList<>();
+	ArrayList<Animation> animations = new ArrayList<>();
+	Shape lastProduction;
+
+	public parser (Scanner lexema){
 		super(lexema);
+	}
+	public ArrayList<Circle> getCircles(){
+		return this.circles;
+	}		
+	public ArrayList<Square> getSquares(){
+		return this.squares;
+	}
+	public ArrayList<Line> getLines(){
+		return this.lines;
+	}
+	public ArrayList<Rectangle> getRectangles(){
+		return this.rectangles;
+	}
+	public ArrayList<Polygon> getPolygons(){
+		return this.polygons;
+	}
+	public ArrayList<Animation> getAnimations(){
+		return this.animations;
 	}
 :}
 
-terminal COLOR, OPENPARENTHESIS, CLOSEPARENTHESIS, CIRCLE, SQUARE, RECTANGLE, LINE, POLYGON, CHART, ANIMATE,
-	 CURVE, OPERADOR, NUMBER, COMA;
+terminal COLOR, OPENPARENTHESIS,CLOSEPARENTHESIS, CIRCLE, SQUARE, RECTANGLE, LINE, POLYGON, CHART, ANIMATE, CURVE, SUMA,
+	MINUS, TIMES, DIV, NUMBER, COMA;
 
-non terminal g, gr, an, r, t, a, c, s, re, li, p, op, d, de, cl, n, m, q, o, ox, l;
+non terminal g, gr, a, c, s, r, l, p, u;
+non terminal Double op;
+non terminal String f;
 
-op ::=	OPERADOR ;
-cl ::=	COLOR ;
-m ::=	COMA ;
-n ::=	NUMBER ;
-q ::=	LINE
-	|CURVE;
-r ::=	OPENPARENTHESIS
-	;	
-t ::= CLOSEPARENTHESIS ;
-ox ::=	op n ox
-	| op l
+precedence left SUMA, MINUS;
+precedence left DIV, TIMES;
+precedence left OPENPARENTHESIS, CLOSEPARENTHESIS;
+
+
+
+start with g;
+
+g ::=	CHART gr g
 	| /* empty */
-	;
-o ::=	n ox ;
-l ::=	r o t ox ;
-a ::= l m ;
-c ::= a a a cl ;
-s ::= a a a cl ;
-re ::= a a a a cl ;
-li ::= a a a a cl ;
-p ::= a a a a a cl ;
-gr ::=	CIRCLE r c t
-	| SQUARE r s t
-	| RECTANGLE r re t
-	| LINE r li t
-	| POLYGON r p t
-	;
-an ::= ANIMATE d;
-de ::= a a q;
-d ::= r de t;
-g ::=	CHART gr
-	|an
-	;
+	| error:e1 {: System.out.println("Error encontrado: "+e1); :};
+
+u ::=	ANIMATE OPENPARENTHESIS a CLOSEPARENTHESIS {: System.out.println("Animacion Encontrada: "); :}
+	| /* empty */;
+
+gr ::=	CIRCLE OPENPARENTHESIS c CLOSEPARENTHESIS u{: System.out.println("Se encontro un circulo"); :}
+	| SQUARE OPENPARENTHESIS s CLOSEPARENTHESIS u	{: System.out.println("Se encontro un cuadrado"); :}
+	| RECTANGLE OPENPARENTHESIS r CLOSEPARENTHESIS u	{: System.out.println("Se encontro un rectangulo"); :}
+	| LINE OPENPARENTHESIS l CLOSEPARENTHESIS u	{: System.out.println("Se encontro un linea"); :}
+	| POLYGON OPENPARENTHESIS p CLOSEPARENTHESIS u	{: System.out.println("Se encontro un poligono"); :}
+	| error:e1 {: System.out.println("Error encontrado: "+e1); :};
+
+//OPERACIONES
+op ::=	 op:o1 MINUS op:o2	{: RESULT= o1 - o2; :}	
+	| op:o1 SUMA op:o2 {: RESULT=o1 + o2; :}	
+	| op:o1 TIMES op:o2	{: RESULT= o1 * o2; :}	
+	| op:o1 DIV op:o2	{: RESULT= o1 / o2; :}	
+	| OPENPARENTHESIS op:o1 CLOSEPARENTHESIS	{: RESULT= o1;:}
+	| NUMBER:o		{: RESULT= Double.parseDouble(String.valueOf(o));:}
+	| error: e {: System.out.println("Error: "+e); :}	;		
+f ::=	LINE {: RESULT="linea"; :}
+	|CURVE {: RESULT="curva"; :};
+a ::= 	op:n1 COMA op:n2 COMA f:t {: System.out.println("Se encontro una animacion: "+n1+", "+n2+", "+t); 
+	animations.add(new Animation(lastProduction, String.valueOf(n1), String.valueOf(n2),String.valueOf(t)));:} ;
+
+c ::=	op:n1 COMA op:n2 COMA op:n3 COMA COLOR:clr {: System.out.println("Circulo: "+n1+", "+n2+", "+n3+", "+clr); 
+	circles.add(new Circle(String.valueOf(clr), String.valueOf(n1), String.valueOf(n2), String.valueOf(n3)  ));		
+	lastProduction = circles.get(circles.size()-1);:};
+
+s ::=	op:n1 COMA op:n2 COMA op:n3 COMA COLOR:clr {: System.out.println("Cuadrado: "+n1+", "+n2+", "+n3+", "+clr); 
+	squares.add(new Square(String.valueOf(clr), String.valueOf(n1), String.valueOf(n2), String.valueOf(n3)  ));
+		lastProduction = squares.get(squares.size()-1);:};
+
+r ::=	op:n1 COMA op:n2 COMA op:n3 COMA op:n4 COMA COLOR:clr {: System.out.println("Rectangle: "+n1+", "+n2+", "+n3+", "+n4+", "+clr); 
+	rectangles.add(new Rectangle(String.valueOf(clr), String.valueOf(n1), String.valueOf(n2), String.valueOf(n3), String.valueOf(n4)  ));
+	lastProduction = rectangles.get(rectangles.size()-1);:};
+
+l ::=	op:n1 COMA op:n2 COMA op:n3 COMA op:n4 COMA COLOR:clr {: System.out.println("Line: "+n1+", "+n2+", "+n3+", "+n4+", "+clr); 
+	lines.add(new Line(String.valueOf(clr), String.valueOf(n1), String.valueOf(n2), String.valueOf(n3), String.valueOf(n4) ));
+	lastProduction = lines.get(lines.size()-1);:};
+
+p ::=	op:n1 COMA op:n2 COMA op:n3 COMA op:n4 COMA op:n5 COMA COLOR:clr {: System.out.println("Polygon: "+n1+", "+n2+", "+n3+", "+n4+", "+n5+","+clr);
+	polygons.add(new Polygon(String.valueOf(clr), String.valueOf(n1), String.valueOf(n2), String.valueOf(n3), String.valueOf(n4), String.valueOf(n5))); 	
+	lastProduction = polygons.get(polygons.size()-1);:};
+
 
 	
 

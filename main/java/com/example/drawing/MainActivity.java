@@ -1,10 +1,9 @@
 package com.example.drawing;
 
-import android.graphics.Color;
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -12,23 +11,28 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
-import com.example.Parser.Lexema;
+import com.example.Parser.Scanner;
 import com.example.Parser.parser;
+import com.example.Shapes.Animation;
+import com.example.Shapes.Shape;
 
-import org.xml.sax.Parser;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.List;
 
 
 public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
 
-    Render shape;
     EditText editText ;
     Button entryButton;
     String[] optionsSpinner = {"Ayuda Lexica","Graficar Circulo","Graficar Cuadrado","Graficar Rectangulo", "Graficar Linea","Graficar Poligono","Animar objeto"};
+    public static parser dataOfParser;
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         editText = (EditText) findViewById(R.id.editTextTextMultiLine);
@@ -47,31 +51,29 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             public void onClick(View v) {
                 try {
                     String entry = editText.getText().toString();
-                    StringReader reader = new StringReader(entry);
-
-                    Lexema lexema = new Lexema(reader);
+                    Reader reader  = new StringReader(entry);
+                    Scanner lexema = new Scanner(reader);
                     parser parser = new parser(lexema);
                     parser.parse();
                     List<String> hola = lexema.getErrorList();
                     for(int index=0; index<hola.size();index++){
                         editText.append(hola.get(index).toString());
                     }
-
+                    dataOfParser = parser;
+                    openShapeActivity();
                 } catch (Exception e) {
                     e.printStackTrace();
                     editText.append("error: "+e.getMessage());
                     e.printStackTrace();
                 }
-
-
             }
         });
-        /*//The context of what are we going to work
-        shape = new Render(this);
-        shape.setBackgroundColor(Color.BLUE);
-        setContentView(shape);*/
     }
 
+    public void openShapeActivity(){
+        Intent intent = new Intent(this, ShapeActivity.class);
+        startActivity(intent);
+    }
 
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -104,4 +106,5 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     public void onNothingSelected(AdapterView<?> parent) {
 
     }
+
 }
