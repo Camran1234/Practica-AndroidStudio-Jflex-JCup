@@ -1,6 +1,7 @@
 package com.example.Parser;
 import java_cup.runtime.*;
 import com.example.Shapes.*;
+import com.example.Errors.ErrorSintactico;
 import java.util.ArrayList;
 
 parser code {:
@@ -10,10 +11,14 @@ parser code {:
 	ArrayList<Rectangle> rectangles = new ArrayList<>();
 	ArrayList<Polygon> polygons = new ArrayList<>();
 	ArrayList<Animation> animations = new ArrayList<>();
+	ArrayList<ErrorSintactico> errorSintacticos = new ArrayList<>();
 	Shape lastProduction;
 
 	public parser (Scanner lexema){
 		super(lexema);
+	}
+	public ArrayList<ErrorSintactico> getMistakes(){
+		return errorSintacticos;
 	}
 	public ArrayList<Circle> getCircles(){
 		return this.circles;
@@ -33,6 +38,20 @@ parser code {:
 	public ArrayList<Animation> getAnimations(){
 		return this.animations;
 	}
+@Override
+	public void syntax_error(Symbol symbol){
+	    report_expected_token_ids();
+	    int line = symbol.left;
+	    int column = symbol.right;
+	    String token = (String) cur_token.value;
+	    //Obtenemos la produccion
+        String errorArmado="";
+        for(int index=0; index<expected_token_ids().size() ; index++){
+            errorArmado += symbl_name_from_id(expected_token_ids().get(index));
+        }
+	    String error = "Se esperaba la forma: " + errorArmado;
+        errorSintacticos.add(new ErrorSintactico(token, line, column, error));
+    	}
 :}
 
 terminal COLOR, OPENPARENTHESIS,CLOSEPARENTHESIS, CIRCLE, SQUARE, RECTANGLE, LINE, POLYGON, CHART, ANIMATE, CURVE, SUMA,
@@ -50,19 +69,19 @@ precedence left OPENPARENTHESIS, CLOSEPARENTHESIS;
 
 start with g;
 
-g ::=	CHART gr g
+g ::=	CHART gr u g
 	| /* empty */
-	| error:e1 {: System.out.println("Error encontrado: "+e1); :};
+	| error;
 
 u ::=	ANIMATE OPENPARENTHESIS a CLOSEPARENTHESIS {: System.out.println("Animacion Encontrada: "); :}
 	| /* empty */;
 
-gr ::=	CIRCLE OPENPARENTHESIS c CLOSEPARENTHESIS u{: System.out.println("Se encontro un circulo"); :}
-	| SQUARE OPENPARENTHESIS s CLOSEPARENTHESIS u	{: System.out.println("Se encontro un cuadrado"); :}
-	| RECTANGLE OPENPARENTHESIS r CLOSEPARENTHESIS u	{: System.out.println("Se encontro un rectangulo"); :}
-	| LINE OPENPARENTHESIS l CLOSEPARENTHESIS u	{: System.out.println("Se encontro un linea"); :}
-	| POLYGON OPENPARENTHESIS p CLOSEPARENTHESIS u	{: System.out.println("Se encontro un poligono"); :}
-	| error:e1 {: System.out.println("Error encontrado: "+e1); :};
+gr ::=	CIRCLE OPENPARENTHESIS c CLOSEPARENTHESIS {: System.out.println("Se encontro un circulo"); :}
+	| SQUARE OPENPARENTHESIS s CLOSEPARENTHESIS 	{: System.out.println("Se encontro un cuadrado"); :}
+	| RECTANGLE OPENPARENTHESIS r CLOSEPARENTHESIS 	{: System.out.println("Se encontro un rectangulo"); :}
+	| LINE OPENPARENTHESIS l CLOSEPARENTHESIS 	{: System.out.println("Se encontro un linea"); :}
+	| POLYGON OPENPARENTHESIS p CLOSEPARENTHESIS 	{: System.out.println("Se encontro un poligono"); :}
+	| error;
 
 //OPERACIONES
 op ::=	 op:o1 MINUS op:o2	{: RESULT= o1 - o2; :}	
@@ -71,7 +90,7 @@ op ::=	 op:o1 MINUS op:o2	{: RESULT= o1 - o2; :}
 	| op:o1 DIV op:o2	{: RESULT= o1 / o2; :}	
 	| OPENPARENTHESIS op:o1 CLOSEPARENTHESIS	{: RESULT= o1;:}
 	| NUMBER:o		{: RESULT= Double.parseDouble(String.valueOf(o));:}
-	| error: e {: System.out.println("Error: "+e); :}	;		
+	| error;		
 f ::=	LINE {: RESULT="linea"; :}
 	|CURVE {: RESULT="curva"; :};
 a ::= 	op:n1 COMA op:n2 COMA f:t {: System.out.println("Se encontro una animacion: "+n1+", "+n2+", "+t); 
